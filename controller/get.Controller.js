@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { response } = require('express');
+const ip = require('ip')
 const pool = require('../database/index');
 
 const getContoller = {
@@ -49,13 +50,34 @@ const getContoller = {
         }
     },
 
+    getAllComments: async (req, res) => {
+        const bookId = req.params.id
+        try{
+            const sql = "SELECT comment,date,ip_address FROM comments WHERE book_id = ? ORDER BY date DESC";
+            const [rows,fields] = await pool.query(sql,[bookId])
+            res.json({
+                data:rows
+            })
+        }
+        catch (error){
+            console.log(error)
+            res.status(500).send("Server Error");
+        }
+
+    },
+
     createComment: async (req,res)=> {
         const bookId = req.params.id;
         try{
-            const {username,comment} = req.body
+            var {username,comment} = req.body
+            if (username == ""){
+                username = "Anon" + String(Math.floor(Math.random() * 1000))
+            }
             const book_id = bookId
-            const sql = "INSERT into comments (username, book_id, comment) VALUES (?, ?, ?)"
-            const [rows,fields] = await pool.query(sql,[username, book_id, comment])
+            const user_ip = ip.address()
+            const comment_500 = comment.slice(0,500)
+            const sql = "INSERT into comments (username, book_id, comment, ip_address) VALUES (?, ?, ?, ?)"
+            const [rows,fields] = await pool.query(sql,[username, book_id, comment_500, user_ip])
             res.json({
                 data:rows
             })
@@ -69,7 +91,7 @@ const getContoller = {
     getAnonComment: async (req, res)=> {
         const bookId = req.params.id;
         try{
-            const sql = "SELECT comment,date FROM comments WHERE book_id = ? AND username = ? ORDER BY date DESC";
+            const sql = "SELECT comment,date,ip_address FROM comments WHERE book_id = ? AND username LIKE 'Anon%' ORDER BY date DESC";
             const [rows,fields] = await pool.query(sql,[bookId,""])
             if (rows.length > 0){
                 res.json({
@@ -79,6 +101,36 @@ const getContoller = {
                 res.json({
                     data:"Anonymous Comments not found !"
                 })
+        }
+        catch (error){
+            console.log(error)
+            res.status(500).send("Server Error");
+        }
+
+    },
+
+    getCharacters: async (req,res) => {
+        const bookId = req.params.id;
+        try {
+            const response = await axios.get(`https://anapioficeandfire.com/api/books/${bookId}`)
+            const characters = response.data.characters;
+            var data =  characters.map( (char) => {
+                return char
+                //  axios.get(char)
+                // .then((response)=>{
+                //     return {
+                //         name:response.data.name,
+                //         gender:response.data.gender,
+                //         born:response.data.born,
+                //         died:response.data.died
+                //     }
+                // })
+                // .catch(err=>{
+                //     console.error(err)
+                // })              
+            })
+            // console.log(data)
+            res.json(data)
         }
         catch (error){
             console.log(error)
