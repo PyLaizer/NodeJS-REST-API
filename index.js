@@ -8,7 +8,7 @@ const getRouter = require('./routes/get.Router')
 app.use(express.urlencoded({}))
 app.use(express.json())
 
-app.use("/books",getRouter)
+app.use("/api/books",getRouter)
 
 const PORT = process.env.PORT || 8000
 
