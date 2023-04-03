@@ -3,7 +3,7 @@ const { response } = require('express');
 const ip = require('ip')
 const pool = require('../database/index');
 
-const getContoller = {
+const getController = {
 
     getAll: async (req,res) => {
         try{ 
@@ -97,10 +97,11 @@ const getContoller = {
                 res.json({
                     data:rows
                 })
-            }
+            }else{
                 res.json({
                     data:"Anonymous Comments not found !"
                 })
+            }
         }
         catch (error){
             console.log(error)
@@ -141,4 +142,4 @@ const getContoller = {
 
 }
 
-module.exports = getContoller
+module.exports = getController
